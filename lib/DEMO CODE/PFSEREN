@@ -1,0 +1,231 @@
+
+
+
+import 'package:cartlist/FUNCTIONS/cartAlertBox.dart';
+import 'package:cartlist/MODAL/quantityListModal.dart';
+import 'package:cartlist/PROVIDER/quantityListProvider.dart';
+import 'package:cartlist/RESOURCE/colorFile.dart';
+import 'package:cartlist/WIDGETS/buttonWidgets.dart';
+import 'package:cartlist/WIDGETS/cardWidgets.dart';
+import 'package:cartlist/WIDGETS/textWidgets.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class QuantityListClass extends StatefulWidget {
+  const QuantityListClass({super.key});
+
+  @override
+  State<QuantityListClass> createState() => _QuantityListClassState();
+}
+
+class _QuantityListClassState extends State<QuantityListClass> {
+  String selectedItemCount = "25Gram";
+  @override
+  Widget build(BuildContext context) {
+    final quantityListProvider =
+        Provider.of<QuantityListProvider>(context, listen: false);
+    return Column(
+      children: [
+        labelCardIcon(labelText: 'Select Quantity'),
+        SizedBox(
+          height: 40,
+          child: ListView.builder(
+            itemCount: quantityListProvider.postList.length,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: ((context, index) {
+              QuantityListModal quantityResponse =
+                  quantityListProvider.getPostByIndex(index);
+              return Theme(
+                data: ThemeData(unselectedWidgetColor: Colors.transparent),
+                child: Stack(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(4),
+                      width: 80,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.green),
+                        color: selectedItemCount == quantityResponse.label
+                            ? Colors.green
+                            : Colors.white,
+                      ),
+                    ),
+                    Positioned(
+                      left: 15,
+                      top: 12,
+                      child: Text(
+                        quantityResponse.label,
+                        style: TextStyle(
+                          color: quantityResponse.label == selectedItemCount
+                              ? colorWhite
+                              : colorPrimary,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 30,
+                      bottom: 2,
+                      child: Radio(
+                        activeColor: Colors.transparent,
+                        value: quantityResponse.label,
+                        groupValue: selectedItemCount,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedItemCount = value!;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ),
+        quantityLabel(
+            labelText: "Item Quantity",
+            quantity: selectedItemCount,
+            params: ""),
+        squreBoxButton(context: context),
+      ],
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:cartlist/MODAL/favCategoryModal.dart';
+import 'package:cartlist/PROVIDER/favCategoryNameProvider.dart';
+import 'package:cartlist/PROVIDER/getCartProvider.dart';
+import 'package:cartlist/RESOURCE/assetFile.dart';
+import 'package:cartlist/RESOURCE/colorFile.dart';
+import 'package:cartlist/SERVICE/favCategoryListApi.dart';
+import 'package:cartlist/WIDGETS/alertDialogBox.dart';
+import 'package:cartlist/WIDGETS/buttonWidgets.dart';
+import 'package:cartlist/WIDGETS/cardWidgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:provider/provider.dart';
+
+import '../../SHAREDDPREFERENCE/cartListsSharedPref.dart';
+
+class FavoriteScreen extends StatefulWidget {
+  const FavoriteScreen({super.key});
+
+  @override
+  State<FavoriteScreen> createState() => _FavoriteScreenState();
+}
+
+class _FavoriteScreenState extends State<FavoriteScreen> {
+  TabController? _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    getSharePrefData();
+    getFavCategoryNameResponse();
+  }
+
+  // Cart Response Post To Cart Provider
+  getFavCategoryNameResponse() async {
+    var provider = Provider.of<FavCategoryNameProvider>(context, listen: false);
+    var response = await FavCategoryNameservice.getFavCategoryResponse(
+        context: context, UserID: profileUserID.toString());
+
+    if (response.isSuccessful!) {
+      provider.setPostList(response.data!);
+    } else {}
+  }
+
+  String? profileUserID;
+
+  void getSharePrefData() {
+    setState(() {
+      profileUserID = preferences!.getString("userId");
+    });
+  }
+
+  String initialTab = 'vegitables';
+
+  @override
+  Widget build(BuildContext context) {
+    var providerFavName =
+        Provider.of<FavCategoryNameProvider>(context, listen: false);
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(children: [
+          SizedBox(
+            height: 35,
+            child: ListView.builder(
+              itemCount: providerFavName.postList.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (BuildContext context, int index) {
+                FavCategoryNameModal modalResponse =
+                    providerFavName.getPostByIndex(index);
+                return Theme(
+                  data: ThemeData(unselectedWidgetColor: Colors.transparent),
+                  child: Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(4),
+                        width: 100,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.green),
+                          color: modalResponse.categoryName == initialTab
+                              ? Colors.green
+                              : Colors.white,
+                        ),
+                      ),
+                      Positioned(
+                        left: 15,
+                        top: 12,
+                        child: Text(
+                          modalResponse.categoryName,
+                          style: TextStyle(
+                            color: modalResponse.categoryName == initialTab
+                                ? colorWhite
+                                : colorPrimary,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 30,
+                        bottom: 2,
+                        child: Radio(
+                          activeColor: Colors.transparent,
+                          value: modalResponse.categoryName,
+                          groupValue: initialTab,
+                          onChanged: (value) {
+                            setState(() {
+                              initialTab = value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
